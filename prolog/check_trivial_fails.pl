@@ -55,7 +55,7 @@ checker:check(trivial_fails, Result, Options) :-
     check_trivial_fails(Options, Result).
 
 check_trivial_fails(Options1, Pairs) :-
-    infer_dynl_if_required,
+    infer_dynl_if_required(Options1),
     select_option(match_ai(MatchAI), Options1, Options2, match_head),
     merge_options(Options2,
                   [infer_meta_predicates(false),
