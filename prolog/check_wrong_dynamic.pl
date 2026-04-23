@@ -106,6 +106,10 @@ hide_var_dynamic_hook(is_pure_pred(_, _, _), pure).
 hide_var_dynamic_hook(gen_file_clause(_, _, _, _), file_clause).
 hide_var_dynamic_hook(ld_free(_), local_dynamic).
 hide_var_dynamic_hook(ld_define_relation(_, _, _, _), local_dynamic).
+hide_var_dynamic_hook(ld_asserta(_, _), local_dynamic).
+hide_var_dynamic_hook(ld_assertz(_, _), local_dynamic).
+hide_var_dynamic_hook(ld_retract(_, _), local_dynamic).
+hide_var_dynamic_hook(ld_retractall(_, _), local_dynamic).
 
 :- dynamic
     wrong_dynamic_db/4,
