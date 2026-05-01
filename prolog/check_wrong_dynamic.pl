@@ -102,6 +102,7 @@ hide_var_dynamic_hook(profile_expander(_, _, _, _, _), neck).
 hide_var_dynamic_hook(compat_body(_, _, _, _, _, _), metaprops).
 hide_var_dynamic_hook(is_pure_pred(_, _, _), pure).
 hide_var_dynamic_hook(gen_file_clause(_, _, _, _), file_clause).
+hide_var_dynamic_hook(ld_free(_), local_dynamic).
 
 :- dynamic
     wrong_dynamic_db/4,
