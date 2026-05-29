@@ -86,7 +86,9 @@ hide_var_dynamic_hook(unfold_call(_, _, _, _, _), unfold_calls).
 hide_var_dynamic_hook(no_backtrace_entry(_), filtered_backtrace).
 hide_var_dynamic_hook(det_clause(_, _), check_useless_cuts).
 hide_var_dynamic_hook(dyn_rtcheck_record(_, _), rtchecks).
+hide_var_dynamic_hook(unrtcheck2(_), rtchecks).
 hide_var_dynamic_hook(unrtcheck2(_, _), rtchecks).
+hide_var_dynamic_hook(rtcheck2(_), rtchecks).
 hide_var_dynamic_hook(do_ac_head_prop_idx(_, _, _, _, _), assrt_comment).
 hide_var_dynamic_hook(bind_interface(_, _), interface).
 hide_var_dynamic_hook(unfold_goal(_, _), ref_scenarios).
@@ -103,6 +105,7 @@ hide_var_dynamic_hook(compat_body(_, _, _, _, _, _), metaprops).
 hide_var_dynamic_hook(is_pure_pred(_, _, _), pure).
 hide_var_dynamic_hook(gen_file_clause(_, _, _, _), file_clause).
 hide_var_dynamic_hook(ld_free(_), local_dynamic).
+hide_var_dynamic_hook(ld_define_relation(_, _, _, _), local_dynamic).
 
 :- dynamic
     wrong_dynamic_db/4,
@@ -158,6 +161,7 @@ current_modified_nondynamic(Type, DType, Loc, PI, MFrom, MPI) :-
     Ref = M:H,
     \+ predicate_property(Ref, dynamic),
     \+ predicate_property(Ref, volatile),
+    \+ wrong_dynamic_db(declare, _:F/A, _, _),
     ( predicate_property(Ref, number_of_clauses(_))
     ->Type = error,
       DType = static,
