@@ -47,6 +47,7 @@
 :- use_module(library(from_utils)).
 :- use_module(library(is_entry_point)).
 :- use_module(library(location_utils)).
+:- use_module(library(local_dynamic)).
 :- use_module(library(option_utils)).
 :- use_module(library(ungroup_keys_values)).
 :- use_module(library(condconc)).
@@ -161,26 +162,37 @@ current_edge(X, Y) :-
     ).
 
 % Note: although is not nice, we are using dynamic predicates to cache partial
-% results for performance reasons (edge/2), otherwise the analysis will take 20
+% results for performance reasons (edge/5), otherwise the analysis will take 20
 % times more --EMM
 %
 sweep(FileD, Pairs) :-
-    findall(node(Node, D, From), unmarked(FileD, Node, D, From), UNodes),
-    sort(UNodes, Nodes),
-    maplist(get_adjl(Nodes), Nodes, AdjL),
+    with_local_dynamic([node/3], H, sweep(H, FileD, Pairs)).
+
+sweep(H, FileD, Pairs) :-
+    forall(distinct([Node, D, From],
+                    unmarked(FileD, Node, D, From)),
+           ld_assertz(H, node(Node, D, From))),
+    findall(Adj, curr_adjl(H, Adj), AdjL),
     maplist(add_sort_by(AdjL), AdjL, AdjSG),
     ungroup_keys_values(AdjSG, AdjSL),
     ungroup_keys_values([warning-AdjSL], Pairs).
 
-get_adjl(Nodes, node(X, DX, FX), node(X, DX, LX)-YL) :-
+curr_adjl(H, node(X, DX, LX)-YL) :-
+    distinct(X, ld_call(H, node(X, DX, FX))),
+    % call_nth(distinct(X, ld_call(H, node(X, DX, FX))), N),
+    % ( X = mem_selection:has_compatibility/1 -> gtrace ; true ),
+    % ( X = mem_selection:compatibility/3 -> gtrace ; true ),
     from_location(FX, LX),
+    % format(user_error, "Node (~w): ~w~n", [N, X]),
     findall(Y,
             (   current_edge(X, Y),
-                memberchk(node(Y, _, _), Nodes)
-                *-> true
+                once(ld_call(H, node(Y, _, _)))
+            *-> true
             ;   Y = []
             ), YU),
     sort(YU, YL).
+    % length(YL, YN),
+    % format(user_error, "Adjl (~w): ~w~n", [YN, YL]).
 
 add_sort_by(AdjL, Node-CalleeL, sort_by(InclN, LoopN, CalleeN)/Node-CalleeL) :-
     Node = node(X, _, _),
@@ -208,7 +220,7 @@ assert_edge(SortBy/node(X, D, L)-Y) :-
     ->true
     ; NY = Y
     ),
-    assert(edge(SortBy, X, D, L, NY)).
+    assertz(edge(SortBy, X, D, L, NY)).
 
 compact_results(Results) :-
     findall(Result, compact_result(_, Result), Results).
@@ -262,6 +274,7 @@ unmarked(FileD, Node, D, From) :-
     ( current_defined_predicate(Head),
       functor(H, F, A),
       checkable_unused(Head),
+      % gtrace,
       ( not_marked(H, M)
       ->Node = MPI,
         property_from(Head, D, From),
