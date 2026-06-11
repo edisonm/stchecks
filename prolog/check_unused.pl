@@ -263,10 +263,11 @@ semantic_head(H, M, exp, export, '<exported>'(M:H), From) :-
 checkable_unused(Ref) :-
     Ref = M:H,
     checkable_predicate(Ref),
-    once(( \+ entry_caller(M, H)
-         ; predicate_property(Ref, exported),
-           \+ predicate_property(Ref, public)
-         )).
+    \+ entry_caller(M, H),
+    (   predicate_property(Ref, exported)
+    ->  \+ predicate_property(Ref, public)
+    ;   true
+    ).
 
 unmarked(FileD, Node, D, From) :-
     Head = M:H,
@@ -274,7 +275,6 @@ unmarked(FileD, Node, D, From) :-
     ( current_defined_predicate(Head),
       functor(H, F, A),
       checkable_unused(Head),
-      % gtrace,
       ( not_marked(H, M)
       ->Node = MPI,
         property_from(Head, D, From),
